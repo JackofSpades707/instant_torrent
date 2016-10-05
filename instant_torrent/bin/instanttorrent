@@ -1,1 +1,33 @@
 #!/usr/bin/python3
+
+import os
+
+import requests
+from bs4 import BeautifulSoup
+
+def search(query):
+    url = 'https://thepiratebay.org/search/{}/'.format(query)
+    r = requests.get(url)
+    results = BeautifulSoup(r.content, 'html.parser').findAll(class_='detName')
+    for n, i in enumerate(results):
+        print('[{}] {}'.format(n, i.get_text().strip()))
+    prompt = int(input('> '))
+    return 'https://thepiratebay.org' + results[prompt].find('a')['href']
+
+def get_magnet_link(result):
+    r = requests.get(result)
+    return BeautifulSoup(r.content, 'html.parser').find(class_='download').find('a')['href']
+
+def open_torrent(magnet_link):
+    if os.name == 'nt':
+         os.startfile(magnet_link) # Windows
+    else:
+        from subprocess import call
+        call(['xdg-open', magnet_link]) # Linux
+
+if __name__ == '__main__':
+    query = input('> ')
+    result = search(query)
+    magnet_link = get_magnet_link(result)
+    open_torrent(magnet_link)
+
