@@ -1,0 +1,9 @@
+setup.cfg
+setup.py
+bin/instanttorrent
+instanttorrent/__init__.py
+instanttorrent.egg-info/PKG-INFO
+instanttorrent.egg-info/SOURCES.txt
+instanttorrent.egg-info/dependency_links.txt
+instanttorrent.egg-info/requires.txt
+instanttorrent.egg-info/top_level.txt
