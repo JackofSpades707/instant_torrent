@@ -1,5 +1,5 @@
 
-m setuptools import setup
+from setuptools import setup
 from sys import platform
 
 setup(name='instanttorrent',
