@@ -26,6 +26,7 @@ def open_torrent(magnet_link):
         call(['xdg-open', magnet_link]) # Linux
 
 if __name__ == '__main__':
+    print('enter your search query')
     query = input('> ')
     result = search(query)
     magnet_link = get_magnet_link(result)
