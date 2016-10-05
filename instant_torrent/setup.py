@@ -12,5 +12,4 @@ setup(name='instanttorrent',
             packages=['instanttorrent'],
             scripts=['bin/instanttorrent'],
             install_requires=['requests',
-                              'bs4']),
-            zip_safe=False)
+                              'bs4'])
