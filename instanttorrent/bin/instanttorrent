@@ -13,6 +13,10 @@ parser.add_argument('-q', '--query', help='query to be searched', type=str, defa
 parser.add_argument('-p', '--proxy', help='proxy to access TPB', type=str, default=None)
 args = parser.parse_args()
 
+if (sys.version_info < (3,)):
+    print('Please run this in python3, python2 is not supported')
+    raise SystemExit
+
 class InstantTorrent:
     def __init__(self, proxy=None):
         self._proxy = self.setup_proxy(proxy)
@@ -35,16 +39,11 @@ class InstantTorrent:
             'ftp': 'ftp://' + proxy
         }
 
-
     def safeprint(self, s):
         try:
             print(s)
         except UnicodeEncodeError:
-            if sys.version_info >= (3,):
-                print(s.encode('utf8').decode(sys.stdout.encoding))
-            else:
-                print(s.encode('utf8'))
-
+            print(s.encode('utf8').decode(sys.stdout.encoding))  # Python3 encoding fix
 
     def search(self, query):
         url = 'https://thepiratebay.org/search/{}/'.format(query)
@@ -56,9 +55,10 @@ class InstantTorrent:
             self.safeprint('[{}] {}'.format(n, result.get_text().strip()))
         try:
             prompt = int(input('> '))
-        except ValueError:
+            result = 'https://thepiratebay.org' + results[prompt].find('a')['href']
+        except (ValueError, IndexError):
             raise SystemExit
-        return 'https://thepiratebay.org' + results[prompt].find('a')['href']
+        return result
 
     def get_magnet_link(self, result):
         r = self._session.get(result)
@@ -66,10 +66,10 @@ class InstantTorrent:
 
     def open_torrent(self, magnet_link):
         if os.name == 'nt':
-             os.startfile(magnet_link) # Windows
+            os.startfile(magnet_link)  # Windows
         else:
             from subprocess import call
-            call(['xdg-open', magnet_link]) # Linux
+            call(['xdg-open', magnet_link])  # Linux
 
 if __name__ == '__main__':
     bot = InstantTorrent(args.proxy)

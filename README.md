@@ -7,8 +7,11 @@ This should be compatible with every OS and torrent client out there, if for som
 ## I Found a bug!
 Great! A problem found is a problem solved, Please open an issue and I'll address it as soon as I can :)
 
+## I want a feature!
+Great! Feel free to open an issue and I'll tag it as an enhancment :)
+
 ## Installation
-* pip install instanttorrent (pip3 if python2-pip is installed)
+* pip install instanttorrent (pip3 if needed, python2 is not supported)
 * Optionally install man page (instructions coming soon)
 
 ## Uninstall
@@ -24,7 +27,6 @@ Options :
 * -p --proxy | sets proxy, defaults to system proxy
 
 ## TODO
-* Python2 support?
 * friendly man page install?
 * Complete man page? (probably not even needed, might remove this)
 * Add some flags for easier use

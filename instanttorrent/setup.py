@@ -3,7 +3,7 @@ from setuptools import setup
 from sys import platform
 
 setup(name='instanttorrent',
-            version='1.4.1',
+            version='1.5',
             description='Instantly download any torrent!',
             url='https://github.com/jackofspades707/instant_torrent',
             author='JackofSpades707',
