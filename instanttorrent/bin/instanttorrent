@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import sys
 from argparse import ArgumentParser
 
 import requests
@@ -40,7 +41,6 @@ class InstantTorrent:
             print(s)
         except UnicodeEncodeError:
             if sys.version_info >= (3,):
-                import sys
                 print(s.encode('utf8').decode(sys.stdout.encoding))
             else:
                 print(s.encode('utf8'))
