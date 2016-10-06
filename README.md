@@ -11,6 +11,9 @@ Great! A problem found is a problem solved, Please open an issue and I'll addres
 * pip install instanttorrent (pip3 if python2-pip is installed)
 * Optionally install man page (instructions coming soon)
 
+## Uninstall
+* okay :( just run 'pip uninstall instanttorrent' (might need superuser privileges)
+
 ## Usage/Example
 $ instanttorrent
 ![alt tag](http://i.imgur.com/N4tyFaF.jpg)
