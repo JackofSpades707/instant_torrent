@@ -9,39 +9,64 @@ from bs4 import BeautifulSoup
 parser = ArgumentParser()
 parser.add_argument('-m', '--max_results', help='max results to output', type=int, default=10)
 parser.add_argument('-q', '--query', help='query to be searched', type=str, default='')
+parser.add_argument('-p', '--proxy', help='proxy to access TPB', type=str, default=None)
 args = parser.parse_args()
 
-def search(query):
-    url = 'https://thepiratebay.org/search/{}/'.format(query)
-    r = requests.get(url)
-    results = BeautifulSoup(r.content, 'html.parser').findAll(class_='detName')
-    for n, result in enumerate(results):
-        if n > args.max_results:
-            break
-        print('[{}] {}'.format(n, result.get_text().strip()))
-    try:
-        prompt = int(input('> '))
-    except ValueError:
-        raise SystemExit
-    return 'https://thepiratebay.org' + results[prompt].find('a')['href']
+class InstantTorrent:
+    def __init__(self, proxy=None):
+        self._proxy = self.setup_proxy(proxy)
+        self._session = requests.Session()
+        self._session.proxies = self._proxy
 
-def get_magnet_link(result):
-    r = requests.get(result)
-    return BeautifulSoup(r.content, 'html.parser').find(class_='download').find('a')['href']
+    def setup_proxy(self, proxy):
+        if proxy is None:
+            http_proxy = os.environ.get('HTTP_PROXY')
+            https_proxy = os.environ.get('HTTPS_PROXY')
+            ftp_proxy = os.environ.get('FTP_PROXY')
+            return {
+                'http': http_proxy,
+                'https': https_proxy,
+                'ftp': ftp_proxy
+            }
+        return {
+            'http': 'http://' + proxy,
+            'https': 'https://' + proxy,
+            'ftp': 'ftp://' + proxy
+        }
 
-def open_torrent(magnet_link):
-    if os.name == 'nt':
-         os.startfile(magnet_link) # Windows
-    else:
-        from subprocess import call
-        call(['xdg-open', magnet_link]) # Linux
+
+    def search(self, query):
+        url = 'https://thepiratebay.org/search/{}/'.format(query)
+        r = self._session.get(url)
+        results = BeautifulSoup(r.content, 'html.parser').findAll(class_='detName')
+        for n, result in enumerate(results):
+            if n > args.max_results:
+                break
+            print('[{}] {}'.format(n, result.get_text().strip()))
+        try:
+            prompt = int(input('> '))
+        except ValueError:
+            raise SystemExit
+        return 'https://thepiratebay.org' + results[prompt].find('a')['href']
+
+    def get_magnet_link(self, result):
+        r = self._session.get(result)
+        return BeautifulSoup(r.content, 'html.parser').find(class_='download').find('a')['href']
+
+    def open_torrent(self, magnet_link):
+        if os.name == 'nt':
+             os.startfile(magnet_link) # Windows
+        else:
+            from subprocess import call
+            call(['xdg-open', magnet_link]) # Linux
 
 if __name__ == '__main__':
+    bot = InstantTorrent(args.proxy)
     query = args.query
     if query == '':
         print('enter your search query')
         query = input('> ')
-    result = search(query)
-    magnet_link = get_magnet_link(result)
-    open_torrent(magnet_link)
+    result = bot.search(query)
+    magnet_link = bot.get_magnet_link(result)
+    bot.open_torrent(magnet_link)
 

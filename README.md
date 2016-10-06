@@ -16,9 +16,9 @@ $ instanttorrent
 ![alt tag](http://i.imgur.com/N4tyFaF.jpg)
 Options :
 * -h --help | Displays help
-* -q --query | Query to be searched
-* -m --max_results | Max results to output
-
+* -q --query | Query to be searched, defaults to prompt you
+* -m --max_results | Max results to output, defaults to 10
+* -p --proxy | sets proxy, defaults to system proxy
 
 ## TODO
 * Python2 support?
