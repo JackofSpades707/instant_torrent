@@ -35,6 +35,17 @@ class InstantTorrent:
         }
 
 
+    def safeprint(self, s):
+        try:
+            print(s)
+        except UnicodeEncodeError:
+            if sys.version_info >= (3,):
+                import sys
+                print(s.encode('utf8').decode(sys.stdout.encoding))
+            else:
+                print(s.encode('utf8'))
+
+
     def search(self, query):
         url = 'https://thepiratebay.org/search/{}/'.format(query)
         r = self._session.get(url)
@@ -42,7 +53,7 @@ class InstantTorrent:
         for n, result in enumerate(results):
             if n > args.max_results:
                 break
-            print('[{}] {}'.format(n, result.get_text().strip()))
+            self.safeprint('[{}] {}'.format(n, result.get_text().strip()))
         try:
             prompt = int(input('> '))
         except ValueError:
