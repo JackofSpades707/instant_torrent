@@ -12,7 +12,6 @@ Great! Feel free to open an issue and I'll tag it as an enhancment :)
 
 ## Installation
 * pip install instanttorrent (pip3 if needed, python2 is not supported)
-* Optionally install man page (instructions coming soon)
 
 ## Uninstall
 * okay :( just run 'pip uninstall instanttorrent' (might need superuser privileges)
@@ -21,6 +20,7 @@ Great! Feel free to open an issue and I'll tag it as an enhancment :)
 $ instanttorrent
 ![alt tag](http://i.imgur.com/omGYXSZ.png)
 Options :
+
 ![alt tag](http://i.imgur.com/jTD7Ik1.png)
 * -h --help | Displays help
 * -q --query | Query to be searched, defaults to prompt you
