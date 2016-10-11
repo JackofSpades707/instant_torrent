@@ -19,16 +19,20 @@ Great! Feel free to open an issue and I'll tag it as an enhancment :)
 
 ## Usage/Example
 $ instanttorrent
-![alt tag](http://i.imgur.com/N4tyFaF.jpg)
+![alt tag](http://i.imgur.com/omGYXSZ.png)
 Options :
+![alt tag](http://i.imgur.com/jTD7Ik1.png)
 * -h --help | Displays help
 * -q --query | Query to be searched, defaults to prompt you
-* -m --max_results | Max results to output, defaults to 10
+* -m --max_results | Max results to output, defaults to 10 (Broken, added to TODO)
 * -p --proxy | sets proxy, defaults to system proxy
+* -s --seeders | hides seeders
+* -l --leechers | hides leechers
+* -d --date | hides upload date
+* --size | hides file size
+
 
 ## TODO
-* friendly man page install?
-* Complete man page? (probably not even needed, might remove this)
-* Add some flags for easier use
-* Support more sites?
-* Settings for sites such as IPTorrents?
+* Rewrite max_results
+* Support more sites? (maybe as an arg?)
+* Settings for sites such as IPTorrents? (would prob need a config file)
