@@ -33,6 +33,7 @@ Options :
 
 
 ## TODO
+* SSH Support
 * Rewrite max_results
 * Support more sites? (maybe as an arg?)
 * Settings for sites such as IPTorrents? (would prob need a config file)
