@@ -119,7 +119,7 @@ class InstantTorrent:
         for tag in html:
             try:
                 results.append([url(tag), title(tag), seeders(tag), leechers(tag), date(tag), size(tag)])
-            except Exception:
+            except AttributeError:
                 pass
         return results
 

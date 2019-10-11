@@ -161,6 +161,9 @@ def TUI_back_button(button):
 
 
 if __name__ == '__main__':
+    # README: probably a good idea to convert all TUI_* functions into a class,
+    # I may come back and do this if I keep messing with the urwid library
+    # This program was always  intended for educational purposes so I may abandon it
     args = parse_args()
     torrents = []
     if args.query is None:
