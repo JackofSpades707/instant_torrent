@@ -57,7 +57,7 @@ def sort_torrents(torrents, key='seeders', descending_order=True):
     if key not in valid_keys:
         print("Invalid key: {}".format(key))
         raise KeyError
-    return sorted(torrents, key=lambda torrent: torrent[key], reverse=descending_order)
+    return sorted(torrents, key=lambda torrent: int(torrent[key]), reverse=descending_order)
 
 def open_torrent(button, mgnt_uri):
     if os.name == 'nt': # windows
