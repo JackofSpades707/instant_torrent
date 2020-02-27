@@ -32,6 +32,11 @@ Options :
 * --size | hides file size
 
 
+## TUI
+* I may update this to be the default via pip install when I have the time
+![TUI List torrents](https://i.imgur.com/uCSss0G.png)
+![TUI torrent view](https://i.imgur.com/j7fM4KM.png)
+
 ## TODO
 * Rewrite max_results
 * Support more sites? (maybe an optional flag to switch specify website?)
