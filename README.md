@@ -1,4 +1,4 @@
-# InstantTorrent ![icon](https://i.imgur.com/fQu32ry.png)
+# InstantTorrent ![icon](https://i.imgur.com/hnQ9P6n.png)
 
 ## What is this?
 This is a torrent downloading tool, you enter your search query, select a torrent and the program will scrape the magnet link and hand it over to your default torrent application on your PC.
