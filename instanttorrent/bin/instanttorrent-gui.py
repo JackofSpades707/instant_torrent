@@ -6,11 +6,8 @@ import urwid
 import requests
 import pyperclip
 from bs4 import BeautifulSoup
-# from tabulate import tabulate
 from argparse import ArgumentParser
 
-# Sort with: `sorted(list_of_dicts, key=lambda dict_obj: dict_obj['age'])`
-# Or : `sorted(torrents, key=lambda torrent: torrent['seeders']`
 
 def get(url, proxies):
     if proxies is None:
@@ -97,6 +94,30 @@ def thepiratebay(query, proxies=None):
             pass
     return results
 
+def kickasstorrents(query, proxies=None):
+    '''
+    parses html output into an array of dicts
+    '''
+    results = []
+    for i in range(10):
+        url = "https://katcr.co/katsearch/page/{}/{}".format(i, query.replace(' ', '%20'))
+        r = get(url, proxies)
+        html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
+        for tag in html:
+            try:
+                title = tag.find(class_="torrents_table__torrent_title").text.strip()
+                mgnt_uri = tag.findAll(class_="button button--small")[1]['href']
+                catagory = tag.find(class_="text--muted").text.strip()
+                size = tag.findAll(class_='text--nowrap text--center')[0].text
+                date = tag.findAll(class_='text--nowrap text--center')[2].text
+                seeders = tag.find(class_='text--nowrap text--center text--success').text
+                leechers = tag.find(class_='text--nowrap text--center text--error').text
+                results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'KAT'))
+            except AttributeError:
+                pass
+    return results
+
+
 def TUI_torrents_list(torrents):
     body = [urwid.Text("InstantTorrent", align='center'), urwid.Divider()]
     for torrent in torrents:
@@ -170,6 +191,7 @@ if __name__ == '__main__':
         # TODO: Replace this with erwid
         args.query = input("Enter your search query\n>_ ").strip()
     torrents += thepiratebay(args.query, args.proxy)
+    torrents += kickasstorrents(args.query, args.proxy)
     torrents = sort_torrents(torrents, key='seeders')
     # output(torrents)
     main = urwid.Padding(TUI_torrents_list(torrents), left=2, right=2)
