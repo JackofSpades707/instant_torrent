@@ -29,6 +29,7 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument('-q', '--query', help='query to be searched', type=str, default=None)
     parser.add_argument('-p', '--proxy', help='proxy to access TPB', type=str, default=None)
+    parser.add_argument('-s', '--sort', help='sort method seeders/leechers/date/size', default='seeders', type=str)
     return parser.parse_args()
 
 def make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, source):
@@ -50,11 +51,12 @@ def sort_torrents(torrents, key='seeders', descending_order=True):
     :param torrents: list of torrent dicts
     :param key: the key to sort the list of dicts by
     '''
+    #TODO: fix size sorting
     valid_keys = ['seeders', 'leechers', 'date', 'size']
     if key not in valid_keys:
         print("Invalid key: {}".format(key))
         raise KeyError
-    return sorted(torrents, key=lambda torrent: int(torrent[key]), reverse=descending_order)
+    return sorted(torrents, key=lambda torrent: torrent[key], reverse=descending_order)
 
 def open_torrent(button, mgnt_uri):
     if os.name == 'nt': # windows
@@ -62,11 +64,6 @@ def open_torrent(button, mgnt_uri):
     else:
         from subprocess import call
         call(['xdg-open', mgnt_uri])
-
-# def output(torrents):
-#     headers = list(torrents[0].keys())[:4]
-#     rows = [list(t.values())[:4] for t in torrents]
-#     print(tabulate(rows, headers))
 
 def thepiratebay(query, proxies=None):
     '''
@@ -83,8 +80,8 @@ def thepiratebay(query, proxies=None):
                 if 'magnet' in i['href']:
                     mgnt_uri = i['href']
             catagory = '{} - {}'.format(tag.get_text().split()[0], tag.get_text().split()[1]).rstrip(')').replace('(', '')
-            seeders = tag.findAll('td')[-2:][0].get_text().strip()
-            leechers = tag.findAll('td')[-2:][1].get_text().strip()
+            seeders = int(tag.findAll('td')[-2:][0].get_text().strip())
+            leechers = int(tag.findAll('td')[-2:][1].get_text().strip())
             date = tag.find(class_='detDesc').get_text()
             date = date.split(',')[0].replace('Uploaded ', '').strip()
             size = tag.find(class_='detDesc').get_text()
@@ -110,8 +107,8 @@ def kickasstorrents(query, proxies=None):
                 catagory = tag.find(class_="text--muted").text.strip()
                 size = tag.findAll(class_='text--nowrap text--center')[0].text
                 date = tag.findAll(class_='text--nowrap text--center')[2].text
-                seeders = tag.find(class_='text--nowrap text--center text--success').text
-                leechers = tag.find(class_='text--nowrap text--center text--error').text
+                seeders = int(tag.find(class_='text--nowrap text--center text--success').text)
+                leechers = int(tag.find(class_='text--nowrap text--center text--error').text)
                 results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'KAT'))
             except AttributeError:
                 pass
@@ -192,7 +189,7 @@ if __name__ == '__main__':
         args.query = input("Enter your search query\n>_ ").strip()
     torrents += thepiratebay(args.query, args.proxy)
     torrents += kickasstorrents(args.query, args.proxy)
-    torrents = sort_torrents(torrents, key='seeders')
+    torrents = sort_torrents(torrents, key=args.sort)
     # output(torrents)
     main = urwid.Padding(TUI_torrents_list(torrents), left=2, right=2)
     top = urwid.Overlay(main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
