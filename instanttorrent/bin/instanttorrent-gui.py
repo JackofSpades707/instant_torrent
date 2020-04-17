@@ -30,7 +30,7 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument('-q', '--query', help='query to be searched', type=str, default=None)
     parser.add_argument('-p', '--proxy', help='proxy to access TPB', type=str, default=None)
-    parser.add_argument('-s', '--sort', help='sort method seeders/leechers/date/size', default='seeders', type=str)
+    parser.add_argument('-s', '--sort', help='sort method [seeders|leechers|date|size]', default='seeders', type=str)
     return parser.parse_args()
 
 def make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, source):
