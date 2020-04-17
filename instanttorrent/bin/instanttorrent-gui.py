@@ -2,6 +2,7 @@
 
 import os
 import re
+import json
 import urwid
 import requests
 import pyperclip
@@ -9,7 +10,7 @@ from bs4 import BeautifulSoup
 from argparse import ArgumentParser
 
 
-def get(url, proxies):
+def get(url, proxies, timeout=5):
     if proxies is None:
         proxies = {
             'http': os.environ.get("HTTP_PROXY"),
@@ -22,10 +23,10 @@ def get(url, proxies):
             'https': 'https://{}'.format(proxies),
             'ftp': 'ftp://{}'.format(proxies)
         }
-    return requests.get(url, proxies=proxies)
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"}
+    return requests.get(url, proxies=proxies, timeout=timeout, headers=headers)
 
 def parse_args():
-    #TODO: How will the user define the sort method?
     parser = ArgumentParser()
     parser.add_argument('-q', '--query', help='query to be searched', type=str, default=None)
     parser.add_argument('-p', '--proxy', help='proxy to access TPB', type=str, default=None)
@@ -55,8 +56,18 @@ def sort_torrents(torrents, key='seeders', descending_order=True):
     valid_keys = ['seeders', 'leechers', 'date', 'size']
     if key not in valid_keys:
         print("Invalid key: {}".format(key))
-        raise KeyError
+        raise KeyError("Invalid sort arguement")
     return sorted(torrents, key=lambda torrent: torrent[key], reverse=descending_order)
+
+def remove_duplicate_torrents(torrents):
+    results = []
+    seen = set()
+    for torrent in torrents:
+        t = tuple(torrent.items())
+        if t not in seen:
+            seen.add(t)
+            results.append(torrent)
+    return results
 
 def open_torrent(button, mgnt_uri):
     if os.name == 'nt': # windows
@@ -65,53 +76,110 @@ def open_torrent(button, mgnt_uri):
         from subprocess import call
         call(['xdg-open', mgnt_uri])
 
-def thepiratebay(query, proxies=None):
+def thepiratebay(query, proxies=None, timeout=5):
+    results = []
+    results += thepiratebayorg(query, proxies, timeout)
+    if len(results) == 0:
+        results += lepiratebay(query, proxies, timeout)
+    return results 
+
+def thepiratebayorg(query, proxies=None, timeout=5):
     '''
     parses html output into an array of dicts
     '''
-    url = "https://thepiratebay.org/search/{}".format(query)
-    r = get(url, proxies)
     results = []
-    html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
-    for tag in html:
-        try:
-            title = tag.find(class_='detName').find('a').get_text().strip()
-            for i in tag.findAll('a'):
-                if 'magnet' in i['href']:
-                    mgnt_uri = i['href']
-            catagory = '{} - {}'.format(tag.get_text().split()[0], tag.get_text().split()[1]).rstrip(')').replace('(', '')
-            seeders = int(tag.findAll('td')[-2:][0].get_text().strip())
-            leechers = int(tag.findAll('td')[-2:][1].get_text().strip())
-            date = tag.find(class_='detDesc').get_text()
-            date = date.split(',')[0].replace('Uploaded ', '').strip()
-            size = tag.find(class_='detDesc').get_text()
-            size = re.search(r'Size [0-9]+.[0-9]+....', size).group().replace('Size ', '').strip()
-            results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'TPB'))
-        except AttributeError:
-            pass
+    url = "https://thepiratebay.org/search/{}".format(query.replace(' ', '+'))
+    try:
+        r = get(url, proxies, timeout=timeout)
+        if r.status_code == 200:
+            html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
+            for tag in html:
+                try:
+                    title = tag.find(class_='detName').find('a').get_text().strip()
+                    for i in tag.findAll('a'):
+                        if 'magnet' in i['href']:
+                            mgnt_uri = i['href']
+                    catagory = '{} - {}'.format(tag.get_text().split()[0], tag.get_text().split()[1]).rstrip(')').replace('(', '')            
+                    seeders = int(tag.findAll('td')[-2:][0].get_text().strip())
+                    leechers = int(tag.findAll('td')[-2:][1].get_text().strip())
+                    date = tag.find(class_='detDesc').get_text()
+                    date = date.split(',')[0].replace('Uploaded ', '').strip()
+                    size = tag.find(class_='detDesc').get_text()
+                    size = re.search(r'Size [0-9]+.[0-9]+....', size).group().replace('Size ', '').strip()
+                    results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'TPB'))
+                except AttributeError:
+                    pass
+    except requests.exceptions.ReadTimeout:
+        pass
     return results
 
-def kickasstorrents(query, proxies=None):
+def lepiratebay(query, proxies=None, timeout=5):
+    results = []
+    url = "https://lepiratebay.org/search/{}".format(query.replace(' ', '%20'))
+    try:
+        r = get(url, proxies, timeout=timeout)
+        if r.status_code == 200:
+            html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
+            del(html[1])
+            for tag in html:
+                try:
+                    title = tag.find(class_='detName').find('a').get_text().strip()
+                    for i in tag.findAll('a'):
+                        if 'magnet' in i['href']:
+                            mgnt_uri = i['href']
+                    catagory = '{} - {}'.format(tag.get_text().split()[0], tag.get_text().split()[1]).rstrip(')').replace('(', '')
+                    seeders = int(tag.findAll('td')[-2:][0].get_text().strip())
+                    leechers = int(tag.findAll('td')[-2:][1].get_text().strip())
+                    date = tag.find(class_='detDesc').get_text()
+                    date = date.split(',')[0].replace('Uploaded ', '').strip()
+                    size = tag.find(class_='detDesc').get_text()
+                    size = re.search(r'Size [0-9]+.[0-9]+....', size).group().replace('Size ', '').strip()
+                    results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'TPB'))
+                except AttributeError:
+                    pass
+    except requests.exceptions.ReadTimeout:
+        pass
+    return results
+
+# def l337(query, proxies=None, timeout=5):
+#     results = []
+#     for i in range(10):
+#         try:
+#             url = "https://1337x.to/search/{}/1/".format(query.replace(' ', '+'))
+#             r = get(url, proxies, timeout=timeout)
+#             if r.status_code == 200:
+#                 html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
+#                 del(html[0])
+#                 for tag in html:
+#                     title = tag.find(class_='coll-1 name').text
+
+
+
+def kickasstorrents(query, proxies=None, timeout=5):
     '''
     parses html output into an array of dicts
     '''
     results = []
     for i in range(10):
-        url = "https://katcr.co/katsearch/page/{}/{}".format(i, query.replace(' ', '%20'))
-        r = get(url, proxies)
-        html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
-        for tag in html:
-            try:
-                title = tag.find(class_="torrents_table__torrent_title").text.strip()
-                mgnt_uri = tag.findAll(class_="button button--small")[1]['href']
-                catagory = tag.find(class_="text--muted").text.strip()
-                size = tag.findAll(class_='text--nowrap text--center')[0].text
-                date = tag.findAll(class_='text--nowrap text--center')[2].text
-                seeders = int(tag.find(class_='text--nowrap text--center text--success').text)
-                leechers = int(tag.find(class_='text--nowrap text--center text--error').text)
-                results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'KAT'))
-            except AttributeError:
-                pass
+        try:
+            url = "https://katcr.co/katsearch/page/{}/{}".format(i, query.replace(' ', '%20'))
+            r = get(url, proxies, timeout=timeout)
+            if r.status_code == 200:
+                html = BeautifulSoup(r.content, 'html.parser').findAll('tr')
+                for tag in html:
+                    try:
+                        title = tag.find(class_="torrents_table__torrent_title").text.strip()
+                        mgnt_uri = tag.findAll(class_="button button--small")[1]['href']
+                        catagory = tag.find(class_="text--muted").text.strip()
+                        size = tag.findAll(class_='text--nowrap text--center')[0].text
+                        date = tag.findAll(class_='text--nowrap text--center')[2].text
+                        seeders = int(tag.find(class_='text--nowrap text--center text--success').text.replace(',', ''))
+                        leechers = int(tag.find(class_='text--nowrap text--center text--error').text.replace(',', ''))
+                        results.append(make_torrent_dict(title, seeders, leechers, catagory, date, size, mgnt_uri, 'KAT'))
+                    except AttributeError:
+                        pass
+        except requests.exceptions.ReadTimeout:
+            pass
     return results
 
 
@@ -189,8 +257,8 @@ if __name__ == '__main__':
         args.query = input("Enter your search query\n>_ ").strip()
     torrents += thepiratebay(args.query, args.proxy)
     torrents += kickasstorrents(args.query, args.proxy)
+    torrents = remove_duplicate_torrents(torrents)
     torrents = sort_torrents(torrents, key=args.sort)
-    # output(torrents)
     main = urwid.Padding(TUI_torrents_list(torrents), left=2, right=2)
     top = urwid.Overlay(main, urwid.SolidFill(u'\N{MEDIUM SHADE}'),
                         align='center', width=('relative', 80),
